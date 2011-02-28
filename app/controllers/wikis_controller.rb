@@ -24,7 +24,16 @@ class WikisController < ApplicationController
     @wiki = @project.wiki || Wiki.new(:project => @project)
     @wiki.attributes = params[:wiki]
     @wiki.save if request.post?
-    render(:update) {|page| page.replace_html "tab-content-wiki", :partial => 'projects/settings/wiki'}
+    respond_to do |format|
+      format.html {
+        # TODO: this is actually not true, since there might be validation errors
+        flash[:notice] = l(:notice_successful_update)
+        redirect_to :controller => 'projects', :action => 'settings', :tab => 'wiki'
+      }
+      format.js {
+        render(:update) {|page| page.replace_html "tab-content-wiki", :partial => 'projects/settings/wiki'}
+      }
+    end
   end
 
   # Delete a project's wiki

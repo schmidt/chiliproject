@@ -31,11 +31,27 @@ class WikisControllerTest < ActionController::TestCase
     User.current = nil
   end
   
-  def test_create
+  def test_create_without_js
     @request.session[:user_id] = 1
     assert_nil Project.find(3).wiki
     post :edit, :id => 3, :wiki => { :start_page => 'Start page' }
+
+    assert_redirected_to :controller => 'projects', :action => 'settings', :tab => 'wiki'
+    assert_equal 'Successful update.', flash[:notice]
+
+    wiki = Project.find(3).wiki
+    assert_not_nil wiki
+    assert_equal 'Start page', wiki.start_page
+  end
+
+  def test_create_via_ajax
+    @request.session[:user_id] = 1
+    assert_nil Project.find(3).wiki
+    post :edit, :id => 3, :wiki => { :start_page => 'Start page' }, :format => 'js'
+
     assert_response :success
+    assert_select_rjs :replace_html, 'tab-content-wiki'
+
     wiki = Project.find(3).wiki
     assert_not_nil wiki
     assert_equal 'Start page', wiki.start_page
